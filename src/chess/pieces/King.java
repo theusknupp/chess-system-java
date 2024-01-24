@@ -2,13 +2,17 @@ package chess.pieces;
 
 import boardgame.Board;
 import boardgame.Position;
+import chess.ChessMatch;
 import chess.ChessPiece;
 import chess.Color;
 
 public class King extends ChessPiece {
 
-	public King(Board board, Color color) {
+	private ChessMatch chessMatch;
+
+	public King(Board board, Color color, ChessMatch chessMatch) {
 		super(board, color);
+		this.chessMatch = chessMatch;
 	}
 
 	@Override
@@ -16,9 +20,16 @@ public class King extends ChessPiece {
 		return "K";
 	}
 
-	private boolean canMove(Position position) { //Verificando se o Rei pode se mover.
-		ChessPiece p = (ChessPiece)getBoard().piece(position);
+	private boolean canMove(Position position) { // Verificando se o Rei pode se mover.
+		ChessPiece p = (ChessPiece) getBoard().piece(position);
 		return p == null || p.getColor() != getColor();
+	}
+
+	// Metodo para testar condição de roque (Jogada especial)
+	private boolean testRookCastling(Position position) {
+		ChessPiece p = (ChessPiece) getBoard().piece(position);
+		// Condição para jogada
+		return p != null && p instanceof Rook && p.getColor() == getColor() && p.getMoveCount() == 0;
 	}
 
 	@Override
@@ -50,28 +61,54 @@ public class King extends ChessPiece {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 		// nw
-		p.setValues(position.getRow() -1, position.getColumn() -1);
+		p.setValues(position.getRow() - 1, position.getColumn() - 1);
 		if (getBoard().positionExists(p) && canMove(p)) {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 		// ne
-		p.setValues(position.getRow() -1, position.getColumn() +1);
+		p.setValues(position.getRow() - 1, position.getColumn() + 1);
 		if (getBoard().positionExists(p) && canMove(p)) {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 		// sw
-		p.setValues(position.getRow() +1, position.getColumn() -1);
+		p.setValues(position.getRow() + 1, position.getColumn() - 1);
 		if (getBoard().positionExists(p) && canMove(p)) {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 		// se
-		p.setValues(position.getRow() +1, position.getColumn() +1);
+		p.setValues(position.getRow() + 1, position.getColumn() + 1);
 		if (getBoard().positionExists(p) && canMove(p)) {
 			mat[p.getRow()][p.getColumn()] = true;
 		}
 
-		
-		
+		// Jogada especial roque
+		if (getMoveCount() == 0 && !chessMatch.getCheck()) {
+			// Testando roque pequeno 
+			Position posT1 = new Position(position.getRow(), position.getColumn() + 3); //Pegando a posição da torre do rei
+			if (testRookCastling(posT1)) { 
+				//Se a condição acima for verdadeira, testa se as casas P1 e P2 estão vazias.
+				Position p1 = new Position(position.getRow(), position.getColumn() + 1);
+				Position p2 = new Position(position.getRow(), position.getColumn() + 2);
+				//Executa o roque se a condição a baixo for satisfeita.
+				if (getBoard().piece(p1) == null && getBoard().piece(p2) == null) {
+					mat[position.getRow()][position.getColumn() + 2] = true;
+				}
+			}
+			
+			// Testando roque grande
+			Position posT2 = new Position(position.getRow(), position.getColumn() - 4); //Pegando posição da torre
+			if (testRookCastling(posT2)) {
+				//Se a condição acima for verdadeira, testa se as casas P1, P2 e P3 estão vazias.
+				Position p1 = new Position(position.getRow(), position.getColumn() - 1);
+				Position p2 = new Position(position.getRow(), position.getColumn() - 2);
+				Position p3 = new Position(position.getRow(), position.getColumn() - 3);
+				//Executa o roque se a condição a baixo for satisfeita.
+				if (getBoard().piece(p1) == null && getBoard().piece(p2) == null && getBoard().piece(p3) == null) {
+					mat[position.getRow()][position.getColumn() - 2] = true;
+				}
+			}
+		}
+
 		return mat;
 
 	}

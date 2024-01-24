@@ -120,6 +120,25 @@ public class ChessMatch {
 			piecesOnTheBoard.remove(capturedPiece); // Remove a peça capturada da contagem de peças do tabuleiro
 			capturedPieces.add(capturedPiece); // Adiciona a peça capturada a contagem de peças capturadas
 		}
+		
+		//Jogada especial roque pequeno (Tratamento)
+		//Movimento manual da torre
+		if (p instanceof King && target.getColumn() == source.getColumn() + 2) {
+			Position sourceT = new Position(source.getRow(), source.getColumn() + 3); //Posição origem
+			Position targetT = new Position(source.getRow(), source.getColumn() + 1); //Posição destino
+			ChessPiece rook = (ChessPiece)board.removePiece(sourceT); //Retira da posição origem
+			board.placePiece(rook, targetT); //Coloca na posição destino
+			rook.increaseMoveCount(); //Incrementa na contagem de movimentos
+		}
+
+		//Jogada especial roque grande
+		if (p instanceof King && target.getColumn() == source.getColumn() - 2) {
+			Position sourceT = new Position(source.getRow(), source.getColumn() - 4); //Posição origem
+			Position targetT = new Position(source.getRow(), source.getColumn() - 1); //Posição destino
+			ChessPiece rook = (ChessPiece)board.removePiece(sourceT); //Retira da posição origem
+			board.placePiece(rook, targetT); //Coloca na posição destino
+			rook.increaseMoveCount();  //Incrementa na contagem de movimentos
+		}		
 
 		return capturedPiece;
 	}
@@ -134,6 +153,25 @@ public class ChessMatch {
 			piecesOnTheBoard.add(capturedPiece); // Adiciona a peça capturada novamente a contagem de peças de tabuleiro
 		}
 
+	
+	
+		// Jogada especial roque pequeno (Desfazendo jogada manualmente)
+		if (p instanceof King && target.getColumn() == source.getColumn() + 2) {
+			Position sourceT = new Position(source.getRow(), source.getColumn() + 3); // Posição origem
+			Position targetT = new Position(source.getRow(), source.getColumn() + 1); // Posição destino
+			ChessPiece rook = (ChessPiece) board.removePiece(targetT); // Tirando da posição destino
+			board.placePiece(rook, sourceT); // Colocando na posição origem
+			rook.decreaseMoveCount(); // Decrementando na contagem de movimentos
+		}
+
+		// Jogada especial roque grande (Desfazendo jogada manualmente)
+		if (p instanceof King && target.getColumn() == source.getColumn() - 2) {
+			Position sourceT = new Position(source.getRow(), source.getColumn() - 4); // Posição origem
+			Position targetT = new Position(source.getRow(), source.getColumn() - 1); // Posição destino
+			ChessPiece rook = (ChessPiece) board.removePiece(targetT); // Tirando da posição destino
+			board.placePiece(rook, sourceT); // Colocando na posição origem
+			rook.decreaseMoveCount(); // Decrementando na contagem de movimentos
+		}
 	}
 
 	private void nextTurn() { // Troca de turno entre jogadores
@@ -214,7 +252,7 @@ public class ChessMatch {
 		placeNewPiece('b', 1, new Knight(board, Color.WHITE));
 		placeNewPiece('c', 1, new Bishop(board, Color.WHITE));
 		placeNewPiece('d', 1, new Queen(board, Color.WHITE));
-		placeNewPiece('e', 1, new King(board, Color.WHITE));
+		placeNewPiece('e', 1, new King(board, Color.WHITE, this));
 		placeNewPiece('f', 1, new Bishop(board, Color.WHITE));
 		placeNewPiece('g', 1, new Knight(board, Color.WHITE));
 		placeNewPiece('h', 1, new Rook(board, Color.WHITE));
@@ -231,7 +269,7 @@ public class ChessMatch {
 		placeNewPiece('b', 8, new Knight(board, Color.BLACK));
 		placeNewPiece('c', 8, new Bishop(board, Color.BLACK));
 		placeNewPiece('d', 8, new Queen(board, Color.BLACK));
-		placeNewPiece('e', 8, new King(board, Color.BLACK));
+		placeNewPiece('e', 8, new King(board, Color.BLACK, this));
 		placeNewPiece('f', 8, new Bishop(board, Color.BLACK));
 		placeNewPiece('g', 8, new Knight(board, Color.BLACK));
 		placeNewPiece('h', 8, new Rook(board, Color.BLACK));
