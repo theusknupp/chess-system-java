@@ -1,5 +1,6 @@
 package chess;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class ChessMatch {
 	private boolean check;
 	private boolean checkMate;
 	private ChessPiece enPassantVulnerable;
+	private ChessPiece promoted;
 
 	private List<Piece> piecesOnTheBoard = new ArrayList<>();
 	private List<Piece> capturedPieces = new ArrayList<>();
@@ -63,6 +65,10 @@ public class ChessMatch {
 	public ChessPiece getEnPassantVulnerable() {
 		return enPassantVulnerable;
 	}
+	
+	public ChessPiece getPromoted() {
+		return promoted;
+	}
 
 	public boolean[][] possibleMoves(ChessPosition sourcePosition) {
 		Position position = sourcePosition.toPosition();
@@ -84,9 +90,17 @@ public class ChessMatch {
 		
 		ChessPiece movedPiece = (ChessPiece)board.piece(target); 
 
+		//Jogada especial promotion
+		promoted = null;
+		if (movedPiece instanceof Pawn) {//Testando se a peça movida foi peão
+			if ((movedPiece.getColor() == Color.WHITE && target.getRow() == 0) || (movedPiece.getColor() == Color.BLACK && target.getRow() == 7)) { //Verificando cor da peça e se chegou ao final do tabuleiro
+				promoted = (ChessPiece)board.piece(target); //Passando o peão como peça promovida
+				promoted = replacePromotedPiece("Q"); //Recebendo a rainha como padrão
+			}
+		}
+		
 		check = (testCheck(opponent(currentPlayer))) ? true : false; // Verificando se o test check do oponente é
-																		// verdadeiro ou falso para definir estado da
-																		// partida
+																		// verdadeiro ou falso para definir estado da																// partida
 
 		if (testCheckMate(opponent(currentPlayer))) { // Se a jogada deixou o oponente em checkMate, o jogo acabou
 			checkMate = true;
@@ -103,7 +117,35 @@ public class ChessMatch {
 		}
 		return (ChessPiece) capturedPiece;
 	}
+	
+	public ChessPiece replacePromotedPiece(String type) {
+		if (promoted == null) { //Se a peça promovida for nulo
+			throw new IllegalStateException("There is no piece to be promoted");
+		}
+		
+		//usando .equals pois String é do tipo classe e não do tipo primitivo
+		if (!type.equals("B") && !type.equals("N") && !type.equals("R") & !type.equals("Q")) { //Se a peça promovida for diferente das peças validas
+			throw new InvalidParameterException("Invalid type for promotion");
+		}
+		
+		Position pos = promoted.getChessPosition().toPosition(); //Pegando posição da peça promovida
+		Piece p = board.removePiece(pos); //Passando para variavel P a posição 
+		piecesOnTheBoard.remove(p); //Excluindo a peça P do tabuleiro
+		
+		ChessPiece newPiece = newPiece(type, promoted.getColor()); //Instanciando a peça
+		board.placePiece(newPiece, pos); //Colocando a peça instanciada na posição que foi removida
+		piecesOnTheBoard.add(newPiece); //Adicionando a peça ao tabuleiro
+		
+		return newPiece;
+	}
 
+	private ChessPiece newPiece(String type, Color color) { //Metodo de instanciação auxiliar para jogada especial promoçao
+		if (type.equals("B")) return new Bishop(board, color); //Se o tipo for B, significa que esta instanciando um Bispo
+		if (type.equals("N")) return new Knight(board, color); //Se o tipo for N, significa que esta instanciando um Cavalo
+		if (type.equals("Q")) return new Queen(board, color);  //Se o tipo for Q, significa que esta instanciando uma Rainha
+        return new Rook(board, color); //Se não for nenhum anterior, significa que esta instanciando uma Torre
+	}
+	
 	private void validateSourcePosition(Position position) {
 		if (!board.thereIsAPiece(position)) { // Exceção de verificação se há peças na devida posição
 			throw new ChessException("There is no piece on source position");
